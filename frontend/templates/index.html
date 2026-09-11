@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fa" dir="ltr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIRE-CLOUD :: Network Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>
+  
+  (function () {
+    var saved = localStorage.getItem('wc-theme');
+    if (saved === 'light' || saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  })();
+</script>
+</head>
+<body>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">WC</span>
+      <div class="brand-text">
+        <span class="brand-name">WIRE<span class="accent">-</span>CLOUD</span>
+        <span class="brand-sub">network traffic analyzer</span>
+      </div>
+    </div>
+
+    <canvas id="pulse" width="200" height="38" title="Live throughput / ترافیک زنده"></canvas>
+
+    <div class="toolbar">
+      <button id="btnCaptureSettings" class="btn btn-ghost btn-settings" title="Change interface / filter">
+        <span class="ico">⚙</span>
+        <span id="settingsLabel">No interface selected</span>
+      </button>
+
+      <button id="btnStart" class="btn btn-start" title="Start capture">
+        <span class="ico">▶</span> START
+      </button>
+      <button id="btnStop" class="btn btn-stop" disabled title="Stop capture">
+        <span class="ico">■</span> STOP
+      </button>
+      <button id="btnClear" class="btn btn-ghost" title="Clear buffer">CLEAR</button>
+      <button id="btnExport" class="btn btn-ghost" title="Export .pcap">EXPORT ⭳</button>
+      <button id="btnSaveSession" class="btn btn-ghost" title="Save session for PHP report dashboard">SAVE</button>
+      <button id="btnStats" class="btn btn-ghost" title="Protocol hierarchy &amp; conversations">STATISTICS</button>
+
+      <button id="btnTheme" class="btn btn-icon" title="Toggle light/dark theme">
+        <span id="themeIcon">☀</span>
+      </button>
+
+      <span id="statusDot" class="status-dot idle"></span>
+    </div>
+  </header>
+
+  <div class="displayfilter">
+    <input id="liveSearch" type="text" spellcheck="false" autocomplete="off"
+           placeholder='Display filter — e.g. tcp.port==443, dns, http.host contains "example", ip.addr==8.8.8.8 (فیلتر نمایش)'
+           title='Wireshark-style syntax: bare protocol names (dns, tcp), field comparisons (ip.addr==1.2.3.4, tcp.port==443, frame.len>500), contains/matches, and/or/not, parentheses. Anything that fails to parse falls back to plain substring search.'>
+    <span id="filterStatus" class="filter-status"></span>
+    <div class="proto-chips" id="protoChips"></div>
+    <button id="btnAutoscroll" class="chip-toggle active" title="Auto-scroll to newest packet">⇩ Auto-scroll</button>
+    <div class="stats" id="statChips">
+      <span class="chip">Packets: <b id="statTotal">0</b></span>
+      <span class="chip">Bytes: <b id="statBytes">0</b></span>
+      <span class="chip">Pkt/s: <b id="statPps">0</b></span>
+    </div>
+  </div>
+
+  <main class="workspace">
+
+    <!-- Packet list pane -->
+    <section id="paneList" class="pane pane-list">
+      <table id="packetTable">
+        <thead>
+          <tr>
+            <th class="col-no">No.</th>
+            <th class="col-time">Time</th>
+            <th class="col-src">Source</th>
+            <th class="col-dst">Destination</th>
+            <th class="col-proto">Protocol</th>
+            <th class="col-len">Length</th>
+            <th class="col-info">Info</th>
+          </tr>
+        </thead>
+        <tbody id="packetBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state">
+        <p>No packets yet — press <b>START</b> to begin capturing.</p>
+        <p class="fa">هنوز پکتی ثبت نشده — برای شروع دکمه START را بزنید.</p>
+      </div>
+    </section>
+
+    <div class="splitter-h" id="splitterH"></div>
+
+    <!-- Bottom split: details tree + hex dump -->
+    <section id="paneBottom" class="pane pane-bottom">
+      <div class="pane-detail">
+        <div class="pane-title">
+          <span>Packet Details / جزئیات پکت</span>
+          <button id="btnFollowStream" class="btn btn-ghost btn-follow is-hidden" title="Reassemble this TCP conversation">FOLLOW TCP STREAM</button>
+        </div>
+        <div id="detailTree" class="detail-tree">
+          <div class="placeholder">Select a packet to inspect its layers.</div>
+        </div>
+      </div>
+      <div class="splitter-v" id="splitterV"></div>
+      <div class="pane-hex">
+        <div class="pane-title">Hex Dump</div>
+        <pre id="hexDump" class="hex-dump"><span class="placeholder">— — —</span></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="statusbar">
+    <span id="footInterface">Interface: —</span>
+    <span id="footFilter">Filter: none</span>
+    <span id="footEngine">Engine: Scapy (Python)</span>
+    <span class="grow"></span>
+    <span>WIRE-CLOUD v1.1</span>
+  </footer>
+</div>
+
+<div id="setupModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="brand-mark">WC</span>
+      <div>
+        <h2>Choose what to capture</h2>
+        <p class="fa">انتخاب کنید روی چه کارت شبکه و با چه فیلتری شنود انجام شود</p>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <label for="modalIface">Network interface / کارت شبکه</label>
+      <select id="modalIface">
+        <option value="">Loading interfaces…</option>
+      </select>
+
+      <label for="modalFilter">BPF filter — optional / فیلتر BPF (اختیاری)</label>
+      <input id="modalFilter" type="text" placeholder="e.g. tcp port 443, udp, host 8.8.8.8"
+             spellcheck="false" autocomplete="off">
+
+      <div class="modal-presets">
+        <span class="preset-chip" data-filter="">All traffic / همه ترافیک</span>
+        <span class="preset-chip" data-filter="tcp">TCP only</span>
+        <span class="preset-chip" data-filter="udp">UDP only</span>
+        <span class="preset-chip" data-filter="port 80 or port 443">Web (80/443)</span>
+        <span class="preset-chip" data-filter="udp port 53">DNS</span>
+        <span class="preset-chip" data-filter="icmp">ICMP / ping</span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="modalSkip" class="btn btn-ghost">Decide later / بعداً تصمیم می‌گیرم</button>
+      <button id="modalStart" class="btn btn-start">Start capturing ▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="statsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <span class="brand-mark">WC</span>
+      <div>
+        <h2>Statistics</h2>
+        <p class="fa">آمار سلسله‌مراتب پروتکل و مکالمات شبکه</p>
+      </div>
+    </div>
+    <div class="stats-tabs">
+      <span class="stats-tab active" data-pane="paneHierarchy">Protocol Hierarchy</span>
+      <span class="stats-tab" data-pane="paneConversations">Conversations</span>
+    </div>
+    <div class="modal-body stats-body">
+      <div id="paneHierarchy" class="stats-pane">
+        <div id="hierarchyTree" class="hierarchy-tree"></div>
+      </div>
+      <div id="paneConversations" class="stats-pane is-hidden">
+        <table class="conv-table">
+          <thead>
+            <tr><th>Endpoint A</th><th>Endpoint B</th><th>Packets</th><th>Bytes</th><th>Protocols</th></tr>
+          </thead>
+          <tbody id="conversationsBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="dim">Live view — updates every second while open.</span>
+      <button id="btnStatsClose" class="btn btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="streamModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <span class="brand-mark">WC</span>
+      <div>
+        <h2 id="streamTitle">Follow TCP Stream</h2>
+        <p class="fa">بازسازی مکالمه TCP — همانند Follow TCP Stream در وایرشارک</p>
+      </div>
+    </div>
+    <div class="modal-body stream-body" id="streamBody"></div>
+    <div class="modal-footer">
+      <span class="dim">▶ client → server &nbsp;·&nbsp; ◀ server → client</span>
+      <button id="btnStreamClose" class="btn btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/filters.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
