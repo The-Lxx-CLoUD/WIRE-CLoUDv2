@@ -3,7 +3,7 @@
   <i>A Wireshark-style, web-based network traffic analyzer — runs locally on Windows & Linux.</i>
 </p>
 <p align="center">
-  <img src="fl/2.png" width="1080">
+  <img src="php/dd.png" width="1080">
 
 ### 📃 Overview :
 ```text
@@ -13,12 +13,7 @@ layer tree, a hex/ASCII dump, Follow-TCP-Stream reassembly, and protocol-hierarc
 the same mental model as Wireshark, reachable from any browser on `http://127.0.0.1:5000` with no desktop
 GUI framework required.
 ```
-```text
-این یک ابزار ضبط و تحلیل پکت است که به‌صورت لوکال روی سیستم شما اجرا می‌شود و یک داشبورد وب تیره و حرفه‌ای دارد.
-ترافیک زنده را در جدولی قابل فیلتر با سینتکس فیلتر نمایشی شبیه وایرشارک نشان می‌دهد، همراه با درخت لایه‌های
-پروتکل هر پکت، خروجی hex/ASCII، بازسازی مکالمه TCP (Follow TCP Stream) و آمار سلسله‌مراتب پروتکل/مکالمات —
-دقیقاً همان مدل وایرشارک اما از طریق هر مرورگری روی آدرس http://127.0.0.1:5000 قابل دسترسی است.
-```
+
 
 ##
 
@@ -40,12 +35,7 @@ What it does NOT try to do: replace Wireshark's protocol coverage of the long ta
 industrial/telecom protocols, etc.), non-Ethernet capture types, or TShark-style scripting. For anything
 beyond this tool's scope, open the exported .pcap in real Wireshark.
 ```
-```text
-وایرشارک حاصل حدود ۲۵ سال توسعه با هزاران decoder پروتکل و پشتیبانی از ده‌ها نوع لینک است. هیچ پروژه‌ای،
-از جمله این یکی، نمی‌تواند به‌طور کامل آن را بازسازی کند. آنچه WIRE-CLOUD اکنون واقعاً پوشش می‌دهد: زبان
-فیلتر نمایشی به سبک وایرشارک، تشخیص عمیق پروتکل‌های پرکاربرد (HTTP/DNS/TLS و موارد دیگر)، Follow TCP Stream،
-و آمار سلسله‌مراتب پروتکل/مکالمات. برای پوشش کامل پروتکل‌ها، فایل .pcap صادرشده را در وایرشارک واقعی باز کنید.
-```
+
 
 ##
 
@@ -168,10 +158,7 @@ wire-cloud/
   tcp and (port == 80 or port == 443)    parentheses
   192.168.1.10                           bare IP literal -> matches src or dst
 ```
-```text
-هر عبارتی که با این گرامر قابل تفسیر نباشد، به‌طور خودکار به یک جست‌وجوی متنی ساده (substring) در فیلدهای
-اطلاعاتی پکت تبدیل می‌شود — یعنی نوشتن فیلتر اشتباه هرگز باعث خطا نمی‌شود.
-```
+
 
 ##
 
@@ -188,10 +175,10 @@ wire-cloud/
 ### 💡 Installation & run — Linux :
 ### Automatic :
 ```bash
-git clone https://github.com/The-Lxx-CLoUD/WIRE-CLoUD
+git clone https://github.com/The-Lxx-CLoUD/WIRE-CLoUDv2
 ```
 ```bash
-cd WIRE-CLoUD
+cd WIRE-CLoUDv2
 ```
 ```bash
 chmod +x run_linux.sh
