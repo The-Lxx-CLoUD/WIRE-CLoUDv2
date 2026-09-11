@@ -1,4 +1,4 @@
-<h1 align="center">👁️ WIRE-CLOUD 👁️</h1>
+<h1 align="center">👁️ WIRE-CLOUD v2 👁️</h1>
 <p align="center">
   <i>A Wireshark-style, web-based network traffic analyzer — runs locally on Windows & Linux.</i>
 </p>
