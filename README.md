@@ -79,7 +79,7 @@ beyond this tool's scope, open the exported .pcap in real Wireshark.
 
 ##
 
-### 🐛 Bugs fixed in this pass :
+### 🐛 Bugs fixed in this version :
 ```text
   - Capture loop called sniff() once outside the restart loop and then again identically inside it,
     duplicating the first 1-second poll on every capture start. Simplified to a single loop.
